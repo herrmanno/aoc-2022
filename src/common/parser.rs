@@ -27,6 +27,7 @@ macro_rules! number_parser {
     };
 }
 
+#[allow(dead_code)]
 pub fn int<Input, Output: PrimInt + FromStr>() -> impl Parser<Input, Output = Output>
 where
     Input: Stream<Token = char>,
@@ -37,6 +38,7 @@ where
     })
 }
 
+#[allow(dead_code)]
 pub fn float<Input, Output: Float + FromStr>() -> impl Parser<Input, Output = Output>
 where
     Input: Stream<Token = char>,

@@ -1,44 +1,52 @@
 mod common;
 mod days;
-use days::DAYS;
+use std::process::exit;
+
+use days::*;
 
 fn main() {
-    match get_args() {
-        Some((day, part)) => {
-            let input = std::io::stdin()
-                .lines()
-                .into_iter()
-                .map(|line| line.unwrap())
-                .collect::<Vec<String>>()
-                .join("\n");
-            if let Some(part) = part {
-                run_day(day, part, &input);
-            } else {
-                run_day(day, 1, &input);
-                run_day(day, 2, &input);
-            }
+    let args = std::env::args().collect::<Vec<String>>();
+    if args.contains(&"--help".to_owned()) || args.contains(&"-h".to_owned()) {
+        usage();
+        exit(0);
+    }
+
+    let mut days = Days::new();
+    let (day, part) = get_args();
+    if let Some(day) = day {
+        let input = std::io::stdin()
+            .lines()
+            .into_iter()
+            .map(|line| line.unwrap())
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        if let Some(part) = part {
+            days.run_part(day, part, &input);
+        } else {
+            days.run_day(day, &input);
         }
-        _ => usage(),
+    } else {
+        let inputs = (1..=days.len())
+            .into_iter()
+            .map(|idx| {
+                let input_file_path = format!("./input/{:0>2}.txt", idx);
+                std::fs::read_to_string(input_file_path).expect("Could not read input file")
+            })
+            .collect::<Vec<String>>();
+        days.run_all(&inputs[..]);
     }
 }
 
-fn run_day(day: usize, part: usize, input: &str) {
-    let day = DAYS
-        .get(day - 1)
-        .unwrap_or_else(|| panic!("{} is not a valid day", day));
-    let func = day
-        .get(part - 1)
-        .unwrap_or_else(|| panic!("{} is not a valid part", part));
-    func(input);
-}
-
-fn get_args() -> Option<(usize, Option<usize>)> {
+fn get_args() -> (Option<usize>, Option<usize>) {
     let args = std::env::args().collect::<Vec<String>>();
-    let day = args.get(1)?.parse().expect("'day' must be a number");
+    let day = args
+        .get(1)
+        .map(|arg| arg.parse().expect("'day' must be a number"));
     let part = args
         .get(2)
         .map(|arg| arg.parse().expect("'part' must be a number"));
-    Some((day, part))
+    (day, part)
 }
 
 fn usage() {
@@ -50,5 +58,5 @@ fn usage() {
             Some(name_str.to_string())
         })
         .unwrap_or_else(|| String::from("<binary>"));
-    println!("USAGE: {} <day> [part]", binary_name);
+    println!("USAGE: {} [day] [part]", binary_name);
 }

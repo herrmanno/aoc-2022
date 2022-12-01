@@ -4,6 +4,26 @@
 //!
 //! <short description of solution>
 
+use crate::common::day::Day;
+
+#[derive(Clone, Default)]
+pub(crate) struct Day00 { commands: Vec<Command> }
+
+impl Day for Day00 {
+    fn part1(&mut self, ) {
+        println!("{:?}", self.commands)
+    }
+
+    fn part2(&mut self, ) {
+        println!("part 2")
+    }
+
+    fn parse(&mut self, input: &str) {
+        self.commands = parser::parse(input).unwrap().0;
+    }
+
+}
+
 pub fn part1(input: &str) {
     let commands = parser::parse(input).unwrap().0;
     println!("{:?}", commands)
@@ -13,19 +33,19 @@ pub fn part2(_input: &str) {
     println!("part 2")
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Command {
     Rect(u32, u32),
     Rotate(RotationType, RotationAxis, i32, i32),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum RotationType {
     Row,
     Column,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum RotationAxis {
     X,
     Y,
