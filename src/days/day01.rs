@@ -14,22 +14,10 @@ impl Day for Day01 {
     type Result2 = u32;
 
     fn parse(&mut self, input: &str) {
-        let mut elfs = vec![];
-        let mut elf = vec![];
-        for line in input.lines() {
-            if line.is_empty() {
-                elfs.push(elf);
-                elf = vec![];
-            } else {
-                elf.push(line.parse::<u32>().expect("Cannot parse"));
-            }
-        }
-
-        if !elf.is_empty() {
-            elfs.push(elf);
-        }
-
-        self.0 = elfs;
+        self.0 = input
+            .split("\n\n")
+            .map(|s| s.lines().map(str::parse).map(Result::unwrap).collect())
+            .collect();
     }
 
     fn part1(&mut self) -> Self::Result1 {
