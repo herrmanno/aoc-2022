@@ -1,6 +1,8 @@
 /// Collection of all puzzles and utilities to run a day's puzzle
 // pub(crate) mod day00; // only used as example; no valid module
 pub(crate) mod day01;
+pub(crate) mod day02;
+pub(crate) mod day03;
 
 use crate::common::day::Day;
 
@@ -13,6 +15,8 @@ macro_rules! run_day {
     ($self: expr, $day: expr, $part: expr, $input: expr) => {{
         match $day {
             1 => run_day!(@ $self, 0, $part, $input),
+            2 => run_day!(@ $self, 1, $part, $input),
+            3 => run_day!(@ $self, 2, $part, $input),
             _ => panic!("Invalid day: {:?}", $day)
         }
     }};
@@ -45,6 +49,8 @@ macro_rules! run_day {
 pub(crate) struct Days(
     // Vec<Box<dyn Day<Result1 = dyn Any, Result2 = dyn Any>>>
     day01::Day01,
+    day02::Day02,
+    day03::Day03,
 );
 
 /// Container for all puzzles
@@ -52,6 +58,8 @@ impl Days {
     pub fn new() -> Self {
         Self(
             day01::Day01::default(),
+            day02::Day02::default(),
+            day03::Day03::default(),
             // vec![
             //     Box::new(day01::Day01::default()),
             // ]
@@ -59,7 +67,7 @@ impl Days {
     }
 
     pub fn len(&self) -> usize {
-        1
+        3
     }
 
     // fn get_mut(&mut self, day: usize) -> &mut impl Day<Result1 = dyn Any, Result2 = dyn Any> {
