@@ -4,6 +4,7 @@ pub(crate) mod day01;
 pub(crate) mod day02;
 pub(crate) mod day03;
 pub(crate) mod day04;
+pub(crate) mod day05;
 
 use crate::common::day::Day;
 
@@ -19,6 +20,7 @@ macro_rules! run_day {
             2 => run_day!(@ $self, 1, $part, $input),
             3 => run_day!(@ $self, 2, $part, $input),
             4 => run_day!(@ $self, 3, $part, $input),
+            5 => run_day!(@ $self, 4, $part, $input),
             _ => panic!("Invalid day: {:?}", $day)
         }
     }};
@@ -54,6 +56,7 @@ pub(crate) struct Days(
     day02::Day02,
     day03::Day03,
     day04::Day04,
+    day05::Day05,
 );
 
 /// Container for all puzzles
@@ -64,6 +67,7 @@ impl Days {
             day02::Day02::default(),
             day03::Day03::default(),
             day04::Day04::default(),
+            day05::Day05::default(),
             // vec![
             //     Box::new(day01::Day01::default()),
             // ]
@@ -71,7 +75,7 @@ impl Days {
     }
 
     pub fn len(&self) -> usize {
-        4
+        5
     }
 
     // fn get_mut(&mut self, day: usize) -> &mut impl Day<Result1 = dyn Any, Result2 = dyn Any> {
