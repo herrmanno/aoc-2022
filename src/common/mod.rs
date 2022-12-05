@@ -2,3 +2,4 @@
 
 pub(crate) mod day;
 pub(crate) mod parser;
+pub(crate) mod transpose;

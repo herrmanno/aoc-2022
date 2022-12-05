@@ -7,7 +7,7 @@
 
 use std::collections::VecDeque;
 
-use crate::common::day::Day;
+use crate::common::{day::Day, transpose::Transpose};
 
 type Tower = VecDeque<char>;
 type Towers = Vec<Tower>;
@@ -29,19 +29,23 @@ impl Day for Day05 {
 
     fn parse(&mut self, input: &str) {
         fn parse_towers(input: &str) -> Towers {
-            let mut towers: Towers = Default::default();
-            for line in input.lines() {
-                let chars = line.chars().collect::<Vec<char>>();
-                for (idx, chunk) in chars.chunks(4).enumerate() {
-                    if towers.get(idx).is_none() {
-                        towers.push(Default::default());
-                    }
-                    if chunk[0] == '[' {
-                        towers[idx].push_back(chunk[1])
-                    }
-                }
-            }
-            towers
+            input
+                .lines()
+                .map(|line| {
+                    line.chars()
+                        .collect::<Vec<char>>()
+                        .chunks(4)
+                        .map(|chunk| {
+                            if chunk[0] == '[' {
+                                Some(chunk[1])
+                            } else {
+                                None
+                            }
+                        })
+                        .collect::<Vec<Option<char>>>()
+                })
+                .transpose()
+                .collect_with(|inner| inner.flatten().collect())
         }
 
         fn parse_moves(input: &str) -> Vec<Move> {
