@@ -1,10 +1,11 @@
-//! Day 01 Calorie Counting
+//! # Day 01 Calorie Counting
 //!
 //! Given a list of grouped number find
-//! a) the group with the max sum
-//! b) the sum of the three groups with most sums
+//!
+//! - a) the group with the max sum
+//! - b) the sum of the three groups with most sums
 
-use crate::common::day::Day;
+use aoc_runner::Day;
 
 #[derive(Default, Clone)]
 pub struct Day02(Vec<(char, char)>);

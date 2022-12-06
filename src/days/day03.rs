@@ -1,13 +1,15 @@
-//! Day 03 Rucksack Reorganization
+//! # Day 03 Rucksack Reorganization
 //!
 //! Find chars contained in
-//! a) both halfs of every line
-//! b) every triplet of lines
+//!
+//! - a) both halfs of every line
+//! - b) every triplet of lines
+//!
 //! and sum them up
 
 use std::collections::BTreeSet;
 
-use crate::common::day::Day;
+use aoc_runner::Day;
 
 #[derive(Default, Clone)]
 pub struct Day03(Vec<Vec<u8>>);

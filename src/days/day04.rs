@@ -1,10 +1,10 @@
 //! Day 04 Camp Cleanup
 //!
 //! Given two ranges per line check for how many pairs
-//! a) one pair is fully contained inside the other
-//! b) the paris overlap
+//! - a) one pair is fully contained inside the other
+//! - b) the paris overlap
 
-use crate::common::day::Day;
+use aoc_runner::Day;
 
 type Range = (u32, u32);
 

@@ -1,13 +1,16 @@
-//! Day 05 Supply Stacks
+//! # Day 05 Supply Stacks
 //!
 //! Parse stacks of chars and move command and
+//!
 //! a) perform the moves element wise
 //! b) moving multiple elements at once
+//!
 //! between stack. Then return the chars at the top of the stacks.
 
 use std::collections::VecDeque;
 
-use crate::common::{day::Day, transpose::Transpose};
+use crate::common::transpose::Transpose;
+use aoc_runner::Day;
 
 type Tower = VecDeque<char>;
 type Towers = Vec<Tower>;
