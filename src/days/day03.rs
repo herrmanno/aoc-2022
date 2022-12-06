@@ -7,14 +7,32 @@
 //!
 //! and sum them up
 
-use std::collections::BTreeSet;
-
 use aoc_runner::Day;
 
 #[derive(Default, Clone)]
 pub struct Day03(Vec<Vec<u8>>);
 
-// TODO: use u64 bitset instead of BTreeSet
+fn find_duplicate<T: AsRef<[U]>, U: AsRef<[u8]>>(slices: T) -> u8 {
+    let len = slices.as_ref().len() as u8;
+    let mut total = [0u8; 256];
+    for slice in slices.as_ref() {
+        let mut seen = [false; 256];
+        for el in slice.as_ref() {
+            let el = *el as usize;
+            if seen[el] {
+                continue;
+            }
+            seen[el] = true;
+            total[el] += 1;
+            if total[el] == len {
+                return el as u8;
+            }
+        }
+    }
+
+    panic!("No duplicate element found");
+}
+
 impl Day for Day03 {
     type Result1 = u32;
     type Result2 = u32;
@@ -36,29 +54,19 @@ impl Day for Day03 {
     }
 
     fn part1(&mut self) -> Self::Result1 {
-        fn find_duplicate(v: &Vec<u8>) -> u32 {
-            let (l, r) = v.split_at(v.len() / 2);
-            let l = l.iter().cloned().collect::<BTreeSet<u8>>();
-            let r = r.iter().cloned().collect::<BTreeSet<u8>>();
-            *l.intersection(&r).min().unwrap() as u32
-        }
-
-        self.0.iter().map(find_duplicate).sum()
+        self.0
+            .iter()
+            .map(|v| {
+                let (l, r) = v.split_at(v.len() / 2);
+                find_duplicate([l, r]) as u32
+            })
+            .sum()
     }
 
     fn part2(&mut self) -> Self::Result2 {
         self.0
             .chunks(3)
-            .map(|chunk| {
-                *(chunk
-                    .iter()
-                    .map(|items| items.iter().cloned().collect::<BTreeSet<u8>>())
-                    .reduce(|a, b| a.intersection(&b).into_iter().cloned().collect())
-                    .unwrap()
-                    .iter()
-                    .next()
-                    .unwrap()) as u32
-            })
+            .map(|chunk| find_duplicate(chunk) as u32)
             .sum()
     }
 }
