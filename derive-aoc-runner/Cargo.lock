@@ -3,9 +3,14 @@
 version = 3
 
 [[package]]
-name = "derive-macro"
+name = "aoc-runner"
+version = "0.1.0"
+
+[[package]]
+name = "derive-aoc-runner"
 version = "0.1.0"
 dependencies = [
+ "aoc-runner",
  "quote",
  "syn",
 ]

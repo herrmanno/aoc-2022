@@ -12,7 +12,6 @@ fn main() {
     }
 
     let mut days = Days::new();
-    days.run_day(0, "", &mut days.get_analyzer());
     let (day, part) = get_args();
     if let Some(day) = day {
         let input = std::io::stdin()
@@ -22,8 +21,7 @@ fn main() {
             .collect::<Vec<String>>()
             .join("\n");
 
-        let mut analyzer = days.get_analyzer();
-        days.run_part(day, part, &input, &mut analyzer);
+        days.run_part(day, part, &input, &mut days.get_analyzer());
     } else {
         let inputs = (1..=days.len())
             .into_iter()
