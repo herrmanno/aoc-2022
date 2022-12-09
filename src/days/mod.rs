@@ -8,6 +8,8 @@ pub(crate) mod day04;
 pub(crate) mod day05;
 pub(crate) mod day06;
 pub(crate) mod day07;
+pub(crate) mod day08;
+pub(crate) mod day09;
 
 use aoc_runner::{Analyzer, Day};
 use derive_aoc_runner::{Analyzer, AoC};
@@ -21,4 +23,6 @@ pub(crate) struct Days(
     day05::Day05,
     day06::Day06,
     day07::Day07,
+    day08::Day08,
+    day09::Day09,
 );
