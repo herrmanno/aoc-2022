@@ -33,14 +33,17 @@ impl std::fmt::Debug for Crt {
 }
 
 #[derive(Default)]
-pub struct Day10(String);
+pub struct Day10(Vec<Option<i32>>);
 
 impl Day for Day10 {
     type Result1 = i32;
     type Result2 = Crt;
 
     fn parse(&mut self, input: &str) {
-        self.0 = input.to_owned();
+        self.0 = input
+            .lines()
+            .map(|line| line.split_once(' ').and_then(|(_, num)| num.parse().ok()))
+            .collect();
     }
 
     fn part1(&mut self) -> Self::Result1 {
@@ -48,11 +51,7 @@ impl Day for Day10 {
         let mut register = 1;
         let mut final_value = 0;
 
-        for line in self.0.lines() {
-            let num = line
-                .split_once(' ')
-                .and_then(|(_, num)| num.parse::<i32>().ok());
-
+        for num in self.0.iter() {
             if cycle > 0 && (cycle + 20) % 40 == 0 {
                 final_value += cycle * register;
             }
@@ -72,17 +71,14 @@ impl Day for Day10 {
     }
 
     fn part2(&mut self) -> Self::Result2 {
-        let mut lines = self.0.lines();
+        let mut nums = self.0.iter();
         let mut cycle: usize = 1;
         let mut register = 1i32;
         let mut pixels = [false; 40 * 6];
 
         while cycle <= 240 {
             let pixel_pos = (cycle as i32 - 1) % 40;
-            let line = lines.next().unwrap();
-            let num = line
-                .split_once(' ')
-                .and_then(|(_, num)| num.parse::<i32>().ok());
+            let num = nums.next().unwrap();
             if let Some(num) = num {
                 pixels[cycle - 1] = pixel_pos.abs_diff(register) <= 1;
                 pixels[cycle] = ((pixel_pos + 1) % 40).abs_diff(register) <= 1;
