@@ -8,7 +8,9 @@
 //! behaves while moving and track all fields the rope's tail visits
 
 use aoc_runner::Day;
-use std::collections::{HashMap, HashSet};
+#[cfg(debug_assertions)]
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 #[derive(Default)]
 pub struct Day09(String);
