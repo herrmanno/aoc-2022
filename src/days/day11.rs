@@ -35,25 +35,43 @@ impl Monkeys {
 /// A babbling, bumbling band of baboons
 impl Monkeys {
     /// Simulate all monkeys throwing their items around for one round
-    fn do_round(&mut self, with_relief: bool) {
+
+    #[inline(always)]
+    fn do_round_with_relief(&mut self) {
         for idx in 0..self.monkeys.len() {
             while let Some(mut item) = self.monkeys[idx].items.pop_front() {
                 self.monkeys[idx].throw_count += 1;
                 item = self.monkeys[idx].operation.apply(item);
 
-                if with_relief {
-                    item /= 3;
-                } else {
-                    item %= self.lcm;
-                }
+                item /= 3;
 
-                if item % self.monkeys[idx].test.divisor == 0 {
-                    let monkey_receiver = self.monkeys[idx].test.monkey_true;
-                    self.monkeys[monkey_receiver].items.push_back(item)
+                let receiver_monkey = if item % self.monkeys[idx].test.divisor == 0 {
+                    self.monkeys[idx].test.monkey_true
                 } else {
-                    let monkey_receiver = self.monkeys[idx].test.monkey_false;
-                    self.monkeys[monkey_receiver].items.push_back(item)
-                }
+                    self.monkeys[idx].test.monkey_false
+                };
+
+                self.monkeys[receiver_monkey].items.push_back(item);
+            }
+        }
+    }
+
+    #[inline(always)]
+    fn do_round_without_relief(&mut self) {
+        for idx in 0..self.monkeys.len() {
+            while let Some(mut item) = self.monkeys[idx].items.pop_front() {
+                self.monkeys[idx].throw_count += 1;
+                item = self.monkeys[idx].operation.apply(item);
+
+                item %= self.lcm;
+
+                let receiver_monkey = if item % self.monkeys[idx].test.divisor == 0 {
+                    self.monkeys[idx].test.monkey_true
+                } else {
+                    self.monkeys[idx].test.monkey_false
+                };
+
+                self.monkeys[receiver_monkey].items.push_back(item);
             }
         }
     }
@@ -171,7 +189,7 @@ impl Day for Day11 {
 
     fn part1(&mut self) -> Self::Result1 {
         for _ in 0..20 {
-            self.0.do_round(true);
+            self.0.do_round_with_relief();
         }
         let throw_counts = {
             let mut counts: Vec<usize> = self.0.monkeys.iter().map(|m| m.throw_count).collect();
@@ -183,7 +201,7 @@ impl Day for Day11 {
 
     fn part2(&mut self) -> Self::Result2 {
         for _ in 0..10000 {
-            self.0.do_round(false);
+            self.0.do_round_without_relief();
         }
         let throw_counts = {
             let mut counts: Vec<usize> = self.0.monkeys.iter().map(|m| m.throw_count).collect();
