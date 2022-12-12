@@ -11,11 +11,11 @@
 //!
 
 use std::collections::{VecDeque};
-use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
+use rustc_hash::{FxHashSet as HashSet};
 
 use aoc_runner::Day;
 
-type HeightMap = HashMap<(i32, i32), u32>;
+type HeightMap = Vec<Vec<u32>>;
 
 #[derive(Default)]
 pub struct Day12 {
@@ -29,23 +29,22 @@ impl Day for Day12 {
     type Result2 = usize;
 
     fn parse(&mut self, input: &str) {
-        let mut map = HeightMap::default();
+        let map_height = input.lines().count();
+        let map_width = input.lines().next().unwrap().len();
+        let mut map = vec![vec![0; map_width]; map_height];
         for (y, line) in input.lines().enumerate() {
             for (x, ch) in line.chars().enumerate() {
-                let y = y as i32;
-                let x = x as i32;
                 match ch {
                     'S' => {
-                        map.insert((y, x), 'a'.into());
-                        self.start = (y, x);
+                        map[y][x] = 'a'.into();
+                        self.start = (y as i32, x as i32);
                     }
                     'E' => {
-                        map.insert((y, x), 'z'.into());
-                        self.target = (y, x);
+                        map[y][x] = 'z'.into();
+                        self.target = (y as i32, x as i32);
                     }
-
                     ch => {
-                        map.insert((y, x), ch.into());
+                        map[y][x] = ch.into();
                     }
                 }
             }
@@ -69,12 +68,17 @@ impl Day for Day12 {
 
             visited.insert(pos);
 
-            let current_height = *self.map.get(&pos).unwrap();
             let (y, x) = pos;
+            let current_height = self.map[y as usize][x as usize];
             for (ny, nx) in [(y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)] {
+                if ny < 0 || nx < 0 {
+                    continue;
+                }
+
                 let valid_neighbour = self
                     .map
-                    .get(&(ny, nx))
+                    .get(ny as usize)
+                    .and_then(|row| row.get(nx as usize))
                     .map(|&height| height <= current_height || height == current_height + 1)
                     .unwrap_or(false);
 
@@ -92,7 +96,7 @@ impl Day for Day12 {
         let mut visited = HashSet::default();
 
         while let Some((distance, pos)) = queue.pop_front() {
-            if self.map.get(&pos) == Some(&'a'.into()) {
+            if self.map.get(pos.0 as usize).and_then(|row| row.get(pos.1 as usize)) == Some(&'a'.into()) {
                 return distance;
             }
 
@@ -102,12 +106,17 @@ impl Day for Day12 {
 
             visited.insert(pos);
 
-            let current_height = *self.map.get(&pos).unwrap();
             let (y, x) = pos;
+            let current_height = self.map[y as usize][x as usize];
             for (ny, nx) in [(y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)] {
+                if ny < 0 || nx < 0 {
+                    continue;
+                }
+
                 let valid_neighbour = self
                     .map
-                    .get(&(ny, nx))
+                    .get(ny as usize)
+                    .and_then(|row| row.get(nx as usize))
                     .map(|&height| height >= current_height || height + 1 == current_height)
                     .unwrap_or(false);
 
@@ -117,7 +126,7 @@ impl Day for Day12 {
             }
         }
 
-        unreachable!("No way fround from start to target");
+        unreachable!("No way fround from target to 'a'");
     }
 }
 
