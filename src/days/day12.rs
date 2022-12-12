@@ -10,7 +10,7 @@
 //! than zero is fine).
 //!
 
-use std::collections::{VecDeque};
+use std::collections::VecDeque;
 
 use aoc_runner::Day;
 
@@ -99,7 +99,12 @@ impl Day for Day12 {
         let mut visited = vec![vec![false; map_width]; map_height];
 
         while let Some((distance, pos)) = queue.pop_front() {
-            if self.map.get(pos.0 as usize).and_then(|row| row.get(pos.1 as usize)) == Some(&'a'.into()) {
+            if self
+                .map
+                .get(pos.0 as usize)
+                .and_then(|row| row.get(pos.1 as usize))
+                == Some(&'a'.into())
+            {
                 return distance;
             }
 

@@ -8,9 +8,9 @@
 //! behaves while moving and track all fields the rope's tail visits
 
 use aoc_runner::Day;
+use rustc_hash::FxHashSet as HashSet;
 #[cfg(debug_assertions)]
 use std::collections::HashMap;
-use rustc_hash::FxHashSet as HashSet;
 
 #[derive(Default)]
 pub struct Day09(String);
@@ -84,7 +84,7 @@ impl Day for Day09 {
         let mut tail: (i32, i32) = (0, 0);
         let mut tails: HashSet<(i32, i32)> = {
             let mut set = HashSet::default();
-            set.insert((0,0));
+            set.insert((0, 0));
             set
         };
 
