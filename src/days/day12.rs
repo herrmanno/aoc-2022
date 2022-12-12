@@ -55,18 +55,20 @@ impl Day for Day12 {
 
     fn part1(&mut self) -> Self::Result1 {
         let mut queue = VecDeque::from([(0, self.start)]);
-        let mut visited = HashSet::default();
+        let map_height = self.map.len();
+        let map_width = self.map[0].len();
+        let mut visited = vec![vec![false; map_width]; map_height];
 
         while let Some((distance, pos)) = queue.pop_front() {
             if pos == self.target {
                 return distance;
             }
 
-            if visited.contains(&pos) {
+            if visited[pos.0 as usize][pos.1 as usize] {
                 continue;
             }
 
-            visited.insert(pos);
+            visited[pos.0 as usize][pos.1 as usize] = true;
 
             let (y, x) = pos;
             let current_height = self.map[y as usize][x as usize];
@@ -93,18 +95,20 @@ impl Day for Day12 {
 
     fn part2(&mut self) -> Self::Result2 {
         let mut queue = VecDeque::from([(0, self.target)]);
-        let mut visited = HashSet::default();
+        let map_height = self.map.len();
+        let map_width = self.map[0].len();
+        let mut visited = vec![vec![false; map_width]; map_height];
 
         while let Some((distance, pos)) = queue.pop_front() {
             if self.map.get(pos.0 as usize).and_then(|row| row.get(pos.1 as usize)) == Some(&'a'.into()) {
                 return distance;
             }
 
-            if visited.contains(&pos) {
+            if visited[pos.0 as usize][pos.1 as usize] {
                 continue;
             }
 
-            visited.insert(pos);
+            visited[pos.0 as usize][pos.1 as usize] = true;
 
             let (y, x) = pos;
             let current_height = self.map[y as usize][x as usize];
