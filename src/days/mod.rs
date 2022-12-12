@@ -1,24 +1,24 @@
 //! Collection of all puzzles and utilities to run a day's puzzle
 
 // pub(crate) mod day00; // only used as example; no valid module
-pub(crate) mod day01;
-pub(crate) mod day02;
-pub(crate) mod day03;
-pub(crate) mod day04;
-pub(crate) mod day05;
-pub(crate) mod day06;
-pub(crate) mod day07;
-pub(crate) mod day08;
-pub(crate) mod day09;
-pub(crate) mod day10;
-pub(crate) mod day11;
-pub(crate) mod day12;
+pub mod day01;
+pub mod day02;
+pub mod day03;
+pub mod day04;
+pub mod day05;
+pub mod day06;
+pub mod day07;
+pub mod day08;
+pub mod day09;
+pub mod day10;
+pub mod day11;
+pub mod day12;
 
 use aoc_runner::{Analyzer, Day};
 use derive_aoc_runner::{Analyzer, AoC};
 
 #[derive(Analyzer, AoC)]
-pub(crate) struct Days(
+pub struct Days(
     day01::Day01,
     day02::Day02,
     day03::Day03,

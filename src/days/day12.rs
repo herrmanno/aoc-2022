@@ -11,7 +11,6 @@
 //!
 
 use std::collections::{VecDeque};
-use rustc_hash::{FxHashSet as HashSet};
 
 use aoc_runner::Day;
 

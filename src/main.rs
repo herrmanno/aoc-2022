@@ -1,8 +1,6 @@
-mod common;
-mod days;
 use std::process::exit;
 
-use days::*;
+use aoc2022::days::*;
 
 fn main() {
     let args = std::env::args().collect::<Vec<String>>();
