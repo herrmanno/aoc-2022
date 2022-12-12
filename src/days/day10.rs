@@ -24,7 +24,7 @@ impl std::fmt::Debug for Crt {
         f.write_char('\n')?;
         for y in 0..6 {
             for x in 0..40 {
-                f.write_char(if self.0[y * 40 + x] { '#' } else { '.' })?;
+                f.write_str(if self.0[y * 40 + x] { "🁢🁢" } else { "  " })?;
             }
             f.write_char('\n')?;
         }
