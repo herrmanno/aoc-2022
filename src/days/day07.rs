@@ -6,7 +6,7 @@
 //! - b) the smallest dir to remove to obtain 30000000 bytes of free disk space
 
 use aoc_runner::Day;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 
 const DISK_SIZE: usize = 70000000;
 const NEEDED_SPACE: usize = 30000000;
@@ -24,7 +24,7 @@ impl Day for Day07 {
     }
 
     fn part1(&mut self) -> Self::Result1 {
-        let mut dir_map = HashMap::new();
+        let mut dir_map = HashMap::default();
         let mut cwds: Vec<String> = vec![];
         for entry in self.0.iter() {
             if let Some(dir) = entry.strip_prefix("$ cd ") {

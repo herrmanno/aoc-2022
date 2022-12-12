@@ -10,7 +10,8 @@
 //! than zero is fine).
 //!
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{VecDeque};
+use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 
 use aoc_runner::Day;
 
@@ -28,7 +29,7 @@ impl Day for Day12 {
     type Result2 = usize;
 
     fn parse(&mut self, input: &str) {
-        let mut map = HeightMap::new();
+        let mut map = HeightMap::default();
         for (y, line) in input.lines().enumerate() {
             for (x, ch) in line.chars().enumerate() {
                 let y = y as i32;
@@ -55,7 +56,7 @@ impl Day for Day12 {
 
     fn part1(&mut self) -> Self::Result1 {
         let mut queue = VecDeque::from([(0, self.start)]);
-        let mut visited = HashSet::new();
+        let mut visited = HashSet::default();
 
         while let Some((distance, pos)) = queue.pop_front() {
             if pos == self.target {
@@ -88,7 +89,7 @@ impl Day for Day12 {
 
     fn part2(&mut self) -> Self::Result2 {
         let mut queue = VecDeque::from([(0, self.target)]);
-        let mut visited = HashSet::new();
+        let mut visited = HashSet::default();
 
         while let Some((distance, pos)) = queue.pop_front() {
             if self.map.get(&pos) == Some(&'a'.into()) {

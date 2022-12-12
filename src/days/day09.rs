@@ -10,7 +10,7 @@
 use aoc_runner::Day;
 #[cfg(debug_assertions)]
 use std::collections::HashMap;
-use std::collections::HashSet;
+use rustc_hash::FxHashSet as HashSet;
 
 #[derive(Default)]
 pub struct Day09(String);
@@ -82,7 +82,11 @@ impl Day for Day09 {
     fn part1(&mut self) -> Self::Result1 {
         let mut head: (i32, i32) = (0, 0);
         let mut tail: (i32, i32) = (0, 0);
-        let mut tails: HashSet<(i32, i32)> = HashSet::from([(0, 0)]);
+        let mut tails: HashSet<(i32, i32)> = {
+            let mut set = HashSet::default();
+            set.insert((0,0));
+            set
+        };
 
         for line in self.0.lines() {
             let (dir, steps): (&str, usize) = line
@@ -107,7 +111,11 @@ impl Day for Day09 {
 
     fn part2(&mut self) -> Self::Result2 {
         let mut knots: [(i32, i32); 10] = [(0, 0); 10];
-        let mut tail_positions: HashSet<usize> = HashSet::from([0]);
+        let mut tail_positions: HashSet<usize> = {
+            let mut set = HashSet::default();
+            set.insert(0);
+            set
+        };
 
         for line in self.0.lines() {
             let (dir, steps): (&str, usize) = line

@@ -13,7 +13,8 @@
 //! between the inner tree and the tree in question
 
 use aoc_runner::Day;
-use std::collections::HashSet;
+// use std::collections::HashSet;
+use rustc_hash::FxHashSet as HashSet;
 
 #[derive(Default)]
 pub struct Day08(Vec<Vec<char>>);
@@ -27,7 +28,7 @@ impl Day for Day08 {
     }
 
     fn part1(&mut self) -> Self::Result1 {
-        let mut trees: HashSet<(usize, usize)> = HashSet::new();
+        let mut trees: HashSet<(usize, usize)> = HashSet::default();
 
         // look from left and right edge for every row
         for (y, row) in self.0.iter().enumerate() {
