@@ -3,6 +3,7 @@
 //! # Example
 //!
 //! ```rust
+//! # use aoc2022::common::transpose::Transpose;
 //! let v = vec![vec![1,2,3], vec![4,5,6]];
 //! let out: Vec<Vec<i32>> = v.into_iter().transpose().collect_all();
 //! assert_eq!(out, vec![vec![1,4], vec![2,5], vec![3,6]])
@@ -34,9 +35,11 @@ where
 ///
 /// # Example
 /// ```rust
+/// # use aoc2022::common::transpose::Transpose;
 /// let v = vec![vec![1,2], vec![3,4]];
-/// assert_eq(v.into_iter().transpose().next().collect(), vec![1,3]);
-/// assert_eq(v.into_iter().transpose().next().collect(), vec![2,4]);
+/// let mut transposed = v.into_iter().transpose();
+/// assert_eq!(transposed.next().unwrap().collect::<Vec<u8>>(), vec![1,3]);
+/// assert_eq!(transposed.next().unwrap().collect::<Vec<u8>>(), vec![2,4]);
 /// ```
 pub struct Transposed<I>
 where
