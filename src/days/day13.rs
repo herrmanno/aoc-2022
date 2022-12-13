@@ -18,7 +18,7 @@ use aoc_runner::Day;
 
 #[derive(PartialEq, Eq, Clone)]
 enum Packet {
-    Num(u32),
+    Num(u8),
     List(Vec<Packet>),
 }
 
@@ -101,10 +101,10 @@ impl Packet {
     }
 
     fn parse_num(stream: &mut Peekable<Chars>) -> Self {
-        let mut num = 0;
+        let mut num = 0u8;
         while stream.peek().unwrap().is_numeric() {
             num *= 10;
-            num += stream.next().unwrap().to_digit(10).unwrap();
+            num += stream.next().unwrap().to_digit(10).unwrap() as u8;
         }
 
         Packet::Num(num)
@@ -147,16 +147,12 @@ impl Day for Day13 {
         let divider_packet_1 = Packet::List(vec![Packet::List(vec![Packet::Num(2)])]);
         let divider_packet_2 = Packet::List(vec![Packet::List(vec![Packet::Num(6)])]);
 
-        let packets: BTreeSet<&Packet> = {
-            let mut packets: BTreeSet<&Packet> = self
-                .0
-                .iter()
-                .flat_map(|(a, b)| [a, b].into_iter())
-                .collect();
-            packets.insert(&divider_packet_1);
-            packets.insert(&divider_packet_2);
-            packets
-        };
+        let packets: BTreeSet<&Packet> = self
+            .0
+            .iter()
+            .flat_map(|(a, b)| [a, b].into_iter())
+            .chain([&divider_packet_1, &divider_packet_2])
+            .collect();
 
         let result = packets
             .into_iter()
