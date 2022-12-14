@@ -64,7 +64,7 @@ impl TimeAnalyzer {
     }
 
     fn total(&self) -> Duration {
-        self.time_all.unwrap_or_default()
+        self.time_all.unwrap_or(self.time_days.values().sum())
     }
 
     fn report(&mut self) {
