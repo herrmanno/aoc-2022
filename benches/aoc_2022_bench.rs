@@ -63,6 +63,7 @@ bench_day!("10", day_10, aoc2022::days::day10::Day10);
 bench_day!("11", day_11, aoc2022::days::day11::Day11);
 bench_day!("12", day_12, aoc2022::days::day12::Day12);
 bench_day!("13", day_13, aoc2022::days::day13::Day13);
+bench_day!("14", day_14, aoc2022::days::day14::Day14);
 
 criterion::criterion_main!(
     day_01::bench,
@@ -78,4 +79,5 @@ criterion::criterion_main!(
     day_11::bench,
     day_12::bench,
     day_13::bench,
+    day_14::bench,
 );
