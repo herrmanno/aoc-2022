@@ -8,9 +8,7 @@
 
 use std::{
     cmp::Ordering,
-    collections::BTreeSet,
     iter::Peekable,
-    ops::ControlFlow,
     str::{Chars, FromStr},
 };
 
@@ -147,34 +145,22 @@ impl Day for Day13 {
         let divider_packet_1 = Packet::List(vec![Packet::List(vec![Packet::Num(2)])]);
         let divider_packet_2 = Packet::List(vec![Packet::List(vec![Packet::Num(6)])]);
 
-        let packets: BTreeSet<&Packet> = self
-            .0
-            .iter()
-            .flat_map(|(a, b)| [a, b].into_iter())
-            .chain([&divider_packet_1, &divider_packet_2])
-            .collect();
+        // index of divider_package_1 start at 1 b/c we have 1-based indices
+        let mut idx_1 = 1;
+        // index of divider_package_2 start at 2 b/c we have 1-based indices and it is also
+        // greater than divider_package_1
+        let mut idx_2 = 2;
 
-        let result = packets
-            .into_iter()
-            .enumerate()
-            .try_fold(None, |acc, (idx, packet)| {
-                if packet == &divider_packet_1 {
-                    ControlFlow::Continue(Some(idx + 1))
-                } else if packet == &divider_packet_2 {
-                    if let Some(value_1) = acc {
-                        ControlFlow::Break(value_1 * (idx + 1))
-                    } else {
-                        panic!("Found divider packet 2 before divider packet 1");
-                    }
-                } else {
-                    ControlFlow::Continue(acc)
-                }
-            });
-
-        match result {
-            ControlFlow::Break(value) => value,
-            _ => unreachable!(),
+        for packet in self.0.iter().flat_map(|(a, b)| [a, b].into_iter()) {
+            if &divider_packet_1 > packet {
+                idx_1 += 1;
+            }
+            if &divider_packet_2 > packet {
+                idx_2 += 1;
+            }
         }
+
+        idx_1 * idx_2
     }
 }
 
