@@ -16,7 +16,7 @@
 //! because no sensor would be able to cover two of the beacon's neighours (if it would, its range)
 //! would 'curve' around the beacon, which is not possible when the sensor's coverage has the shape
 //! of a rhombus (diamond).
-//! But if the four neighbours of the beacon are all covered by different sensors, then those 
+//! But if the four neighbours of the beacon are all covered by different sensors, then those
 //! coordinates are likely [0] intersections between different sensor's coverages. So the best
 //! guesses of coordinates where the distress beacon may be are neighbours of coordinates where
 //! the coverages areas of two sensors intersect.
@@ -24,7 +24,7 @@
 //! [0]: It would be possible that the neighbours of the beacon are all covered by the 'spikes' of
 //! a sensor's coverage area. Luckily, that is not the case with our input.
 
-
+use rustc_hash::FxHashMap as HashMap;
 use rustc_hash::FxHashSet as HashSet;
 
 use aoc_runner::Day;
@@ -151,22 +151,24 @@ impl Day15 {
     }
 
     fn get_beacon_position_in_area(&self, max_area: i32) -> (i32, i32) {
-        let mut points: HashSet<Point> = Default::default();
+        let mut points: HashMap<Point, usize> = Default::default();
         for (idx, a) in self.0.iter().enumerate() {
             for b in self.0.iter().skip(idx + 1) {
                 let intersections = intersection_points(*a, *b).into_iter();
-                points.extend(
-                    intersections
-                        .flat_map(|(x, y)| [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)])
-                        .filter(|(x, y)| *x >= 0 && *y >= 0 && *x <= max_area && *y <= max_area),
-                );
+                for point in intersections
+                    .flat_map(|(x, y)| [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)])
+                    .filter(|(x, y)| *x >= 0 && *y >= 0 && *x <= max_area && *y <= max_area)
+                {
+                    let n = points.entry(point).or_insert(0);
+                    *n += 1;
+                    if *n == 4 && self.check_point(point) {
+                        return point;
+                    }
+                }
             }
         }
 
-        points
-            .into_iter()
-            .find(|p| self.check_point(*p))
-            .expect("No beacon found")
+        panic!("Beacon not found");
     }
 
     /// checks if a point is the holy beacon we are looking for
