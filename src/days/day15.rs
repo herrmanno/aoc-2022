@@ -8,6 +8,22 @@
 //!
 //! where 'covered' means the points distance to any sensor is equal to or less than that sensors
 //! radius.
+//!
+//! The basic idea for part 2 is the following:
+//! If there is a unique (!) coordinate that is not covered by any sensor, then all its neighbour
+//! must be covered by sensors (otherwise it wouldn't be the only uncovered spot).
+//! For this to be true the four neighbouring coordinates must all be covered by different sensors
+//! because no sensor would be able to cover two of the beacon's neighours (if it would, its range)
+//! would 'curve' around the beacon, which is not possible when the sensor's coverage has the shape
+//! of a rhombus (diamond).
+//! But if the four neighbours of the beacon are all covered by different sensors, then those 
+//! coordinates are likely [0] intersections between different sensor's coverages. So the best
+//! guesses of coordinates where the distress beacon may be are neighbours of coordinates where
+//! the coverages areas of two sensors intersect.
+//!
+//! [0]: It would be possible that the neighbours of the beacon are all covered by the 'spikes' of
+//! a sensor's coverage area. Luckily, that is not the case with our input.
+
 
 use rustc_hash::FxHashSet as HashSet;
 
