@@ -12,6 +12,7 @@ aoc-runner = { path = "./aoc-runner" }
 derive-aoc-runner = { path = "./derive-aoc-runner" }
 rustc-hash = "1.1.0"
 criterion = "0.4.0"
+im = "15.1.0"
 
 [[bench]]
 name = "aoc_2022_bench"

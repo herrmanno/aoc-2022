@@ -16,6 +16,7 @@ pub mod day12;
 pub mod day13;
 pub mod day14;
 pub mod day15;
+pub mod day16;
 
 use aoc_runner::{Analyzer, Day};
 use derive_aoc_runner::{Analyzer, AoC};
@@ -37,4 +38,5 @@ pub struct Days(
     day13::Day13,
     day14::Day14,
     day15::Day15,
+    day16::Day16,
 );
