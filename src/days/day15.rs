@@ -25,7 +25,6 @@
 //! a sensor's coverage area. Luckily, that is not the case with our input.
 
 use rustc_hash::FxHashMap as HashMap;
-use rustc_hash::FxHashSet as HashSet;
 
 use aoc_runner::Day;
 
