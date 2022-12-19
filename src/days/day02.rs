@@ -17,7 +17,7 @@ impl Day for Day02 {
     fn parse(&mut self, input: &str) {
         self.0 = input
             .lines()
-            .map(|line| (line.chars().nth(0).unwrap(), line.chars().nth(2).unwrap()))
+            .map(|line| (line.chars().next().unwrap(), line.chars().nth(2).unwrap()))
             .collect();
     }
 
@@ -26,12 +26,12 @@ impl Day for Day02 {
             match xs {
                 ('A', 'X') => 3 + 1,
                 ('A', 'Y') => 6 + 2,
-                ('A', 'Z') => 0 + 3,
-                ('B', 'X') => 0 + 1,
+                ('A', 'Z') => /**/3,
+                ('B', 'X') => /**/1,
                 ('B', 'Y') => 3 + 2,
                 ('B', 'Z') => 6 + 3,
                 ('C', 'X') => 6 + 1,
-                ('C', 'Y') => 0 + 2,
+                ('C', 'Y') => /**/2,
                 ('C', 'Z') => 3 + 3,
                 _ => unreachable!(),
             }
@@ -42,13 +42,13 @@ impl Day for Day02 {
     fn part2(&mut self) -> Self::Result2 {
         fn score_for_round(xs: &(char, char)) -> u32 {
             match xs {
-                ('A', 'X') => 0 + 3,
+                ('A', 'X') => /**/3,
                 ('A', 'Y') => 3 + 1,
                 ('A', 'Z') => 6 + 2,
-                ('B', 'X') => 0 + 1,
+                ('B', 'X') => /**/1,
                 ('B', 'Y') => 3 + 2,
                 ('B', 'Z') => 6 + 3,
-                ('C', 'X') => 0 + 2,
+                ('C', 'X') => /**/2,
                 ('C', 'Y') => 3 + 3,
                 ('C', 'Z') => 6 + 1,
                 _ => unreachable!(),

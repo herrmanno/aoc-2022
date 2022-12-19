@@ -63,6 +63,7 @@ use syn::{parse_macro_input, DeriveInput, Data, Fields, FieldsUnnamed};
 /// Derives
 /// - `fn new() -> Self`
 /// - `fn len(&self) -> usize`
+/// - `fn is_empty(&self) -> bool`
 /// - `fn run_day(&self, day: usize, input: &str, analyzer: &mut impl Analyzer)`
 /// - `fn run_part(&self, day: usize, part: usize, input: &str, analyzer: &mut impl Analyzer)`
 /// - `fn run_all<I: AsRef<str>>(&mut self, inputs: &[I])`
@@ -103,6 +104,16 @@ struct Aoc2022(
                     #[doc = #doc]
                     pub fn len(&self) -> usize {
                         #fields_len
+                    }
+                }
+            };
+
+            let is_empty_impl = {
+                let doc = "Return true if the container hosts no days";
+                quote! {
+                    #[doc = #doc]
+                    pub fn is_empty(&self) -> bool {
+                        #fields_len == 0
                     }
                 }
             };
@@ -187,6 +198,7 @@ struct Aoc2022(
                 impl #ident {
                     #new_impl
                     #len_impl
+                    #is_empty_impl
                     #run_day_impl
                     #run_part_impl
                     #run_all_impl

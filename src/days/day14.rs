@@ -31,7 +31,7 @@ impl Day for Day14 {
             if seen_lines.contains(&line) {
                 continue;
             }
-            seen_lines.insert(line.clone());
+            seen_lines.insert(line);
 
             let instructions = line
                 .split(" -> ")
