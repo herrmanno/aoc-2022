@@ -6,12 +6,6 @@
 //! - b)
 //!
 
-use std::cmp::Reverse;
-use std::collections::BinaryHeap;
-use std::hash::Hash;
-
-use rustc_hash::FxHashSet as HashSet;
-
 use aoc_runner::Day;
 
 type Time = u16;
@@ -44,7 +38,7 @@ impl Blueprint {
     }
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Default)]
 struct BlueprintResult {
     resources: [Resource; 4],
     robots: [Resource; 4],
