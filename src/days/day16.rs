@@ -1,25 +1,29 @@
-//! # Day 16 FIXME: add description
+//! # Day 16 Proboscidea Volcanium
 //!
+//! Given a graph of connected rooms where every room hosts a valve that has a given flow rate
+//! find the optimal route between routes such that the release pressure by every open valve
+//! is miximal. (Every opened valve releases pressure corresponding to its flow rate *for every
+//! remaning time slot*).
 //!
-//! - a)
-//! - b)
+//! - a) with a time limit of 30 minutes
+//! - b) with a time limit of 26 minutes but with two people
 //!
 
 use std::collections::VecDeque;
 
 use aoc_runner::Day;
-use im::HashSet as ImutableSet;
 use rustc_hash::FxHashMap as HashMap;
-use rustc_hash::FxHashSet as HashSet;
+
+type ValveID = u64;
 
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq, Clone, Hash)]
 struct Valve {
-    name: String,
+    id: ValveID,
     flow: usize,
-    tunnels: Vec<String>,
+    tunnels: Vec<ValveID>,
 }
 
-type Valves = HashMap<String, Valve>;
+type Valves = HashMap<ValveID, Valve>;
 
 #[derive(Default)]
 pub struct Day16(Valves, Distances);
@@ -29,8 +33,23 @@ impl Day for Day16 {
     type Result2 = usize;
 
     fn parse(&mut self, input: &str) {
-        self.0 = input
-            .lines()
+        let mut lines: Vec<&str> = input.lines().collect();
+        // sort so that valve "AA" always gets ID 1 << 0 == 1
+        lines.sort_unstable();
+
+        assert!(
+            lines.len() < 64,
+            "Can not handle graph with more than 63 entries for now"
+        );
+
+        let name_id_map: HashMap<String, ValveID> = lines
+            .iter()
+            .enumerate()
+            .map(|(idx, line)| (line.split(' ').nth(1).unwrap().to_string(), 1 << idx))
+            .collect();
+
+        let valves: Valves = lines
+            .iter()
             .map(|line| {
                 let mut words = line.split(' ');
                 let name = words.nth(1).unwrap().to_owned();
@@ -43,216 +62,149 @@ impl Day for Day16 {
                 let tunnels = words
                     .skip(4)
                     .map(|name| name.strip_suffix(',').unwrap_or(name).to_owned())
+                    .map(|name| *name_id_map.get(&name).unwrap())
                     .collect();
                 let valve = Valve {
-                    name: name.clone(),
+                    id: *name_id_map.get(&name).unwrap(),
                     flow,
                     tunnels,
                 };
 
-                (name, valve)
+                (valve.id, valve)
             })
             .collect();
 
-        self.1 = shortest_distances(&self.0);
-    }
+        self.1 = shortest_distances(&valves);
 
-    // FIXME: use DFS as it seems to be faster for n = 30
-    fn part1(&mut self) -> Self::Result1 {
-        const TIME: usize = 30;
-        let non_null_valves: Valves = self
-            .0
+        self.0 = valves
             .clone()
             .into_iter()
             .filter(|(_, valve)| valve.flow > 0)
+            .map(|(id, mut valve)| {
+                valve.tunnels.retain(|name| valves[name].flow > 0);
+                (id, valve)
+            })
             .collect();
-        let total = knapsack(
-            "AA".to_string(),
-            &non_null_valves,
-            ImutableSet::default(),
-            &self.1,
-            TIME,
-            &mut Default::default(),
-        );
 
-        total
+        self.0 = valves;
+    }
+
+    fn part1(&mut self) -> Self::Result1 {
+        const TIME: usize = 30;
+        dfs_max(&self.0, &self.1, TIME)
     }
 
     fn part2(&mut self) -> Self::Result2 {
         const TIME: usize = 26;
-        let non_null_valves: Valves = self
-            .0
-            .clone()
-            .into_iter()
-            .filter(|(_, valve)| valve.flow > 0)
-            .collect();
-        let (total1, path1) = knapsack_with_path(
-            "AA".to_string(),
-            &non_null_valves,
-            ImutableSet::default(),
-            &self.1,
-            TIME,
-            &mut Default::default(),
-        );
+        let results = dfs_with_paths(&self.0, &self.1, TIME);
+        let mut best_score = 0;
 
-        let non_null_valves: Valves = non_null_valves
-            .into_iter()
-            .filter(|(name, _)| !path1.contains(name))
-            .collect();
-        let total2 = knapsack(
-            "AA".to_string(),
-            &non_null_valves,
-            ImutableSet::default(),
-            &self.1,
-            TIME,
-            &mut Default::default(),
-        );
+        for (path_1, score_1) in results.iter() {
+            for (path_2, score_2) in results.iter() {
+                if *path_1 & *path_2 == 0 {
+                    best_score = best_score.max(score_1 + score_2);
+                }
+            }
+        }
 
-        /*
-           I don't really understand why this works yet...
-        */
-        total1 + total2
+        best_score
     }
 }
 
-fn knapsack(
-    pos: String,
-    valves: &Valves,
-    choosen: ImutableSet<String>,
-    distances: &Distances,
-    time: usize,
-    cache: &mut HashMap<(String, usize, ImutableSet<String>), usize>,
-) -> usize {
-    if let Some(result) = cache.get(&(pos.clone(), time, choosen.clone())) {
-        return *result;
+/// find score of best path (by score) that is possible in `max_time`
+fn dfs_max(valves: &Valves, distances: &Distances, max_time: usize) -> usize {
+    let mut best_score = 0;
+
+    type State = (ValveID, Path, usize, usize);
+    let mut queue: Vec<State> = Vec::from([(1, 0, 0, 0)]);
+    while let Some((pos, path, score, time)) = queue.pop() {
+        best_score = best_score.max(score);
+
+        let targets = &distances[&pos];
+        for (tunnel, distance) in targets {
+            if *distance < max_time - time && (path & tunnel == 0) {
+                if let Some(flow) = valves.get(tunnel).map(|valve| valve.flow) {
+                    let new_pos = *tunnel;
+                    let new_path = path | new_pos;
+                    let new_score = score + (flow * (max_time - time - distance - 1));
+                    let new_time = time + (distance + 1);
+                    queue.push((new_pos, new_path, new_score, new_time));
+                }
+            }
+        }
     }
 
-    let result = valves
-        .clone()
-        .iter()
-        .filter(|(name, _)| !choosen.contains(*name))
-        .map(|(name, valve)| {
-            let distance = distances.get(&pos).unwrap().get(name).expect("Foo");
-            (name, valve, *distance)
-        })
-        .filter(|(_, _, distance)| distance + 1 < time)
-        .map(|(name, valve, distance)| {
-            let choosen = {
-                let mut copy = choosen.clone();
-                copy.insert(name.clone());
-                copy
-            };
-            let rest_total = knapsack(
-                name.clone(),
-                valves,
-                choosen,
-                distances,
-                time - distance - 1,
-                cache,
-            );
-            let reward = valve.flow * (time - distance - 1);
-            rest_total + reward
-        })
-        .max()
-        .unwrap_or(0);
-
-    cache.insert((pos, time, choosen), result.clone());
-
-    result
+    best_score
 }
 
-fn knapsack_with_path(
-    pos: String,
-    valves: &Valves,
-    choosen: ImutableSet<String>,
-    distances: &Distances,
-    time: usize,
-    cache: &mut HashMap<(String, usize, ImutableSet<String>), (usize, Vec<String>)>,
-) -> (usize, Vec<String>) {
-    if let Some(result) = cache.get(&(pos.clone(), time, choosen.clone())) {
-        return result.clone();
+type Path = ValveID;
+
+/// find all paths (with scores) that are possible in `max_time`
+fn dfs_with_paths(valves: &Valves, distances: &Distances, max_time: usize) -> HashMap<Path, usize> {
+    let mut results: HashMap<Path, usize> = Default::default();
+
+    type State = (ValveID, Path, usize, usize);
+    let mut queue: Vec<State> = Vec::from([(1, 0, 0, 0)]);
+    while let Some((pos, path, score, time)) = queue.pop() {
+        let best_score = results.get(&path).unwrap_or(&0);
+        if score > *best_score {
+            results.insert(path, score);
+        }
+
+        let targets = &distances[&pos];
+        for (tunnel, distance) in targets {
+            if *distance < max_time - time && (path & tunnel == 0) {
+                if let Some(flow) = valves.get(tunnel).map(|valve| valve.flow) {
+                    let new_pos = *tunnel;
+                    let new_path = path | new_pos;
+                    let new_score = score + (flow * (max_time - time - distance - 1));
+                    let new_time = time + (distance + 1);
+                    queue.push((new_pos, new_path, new_score, new_time));
+                }
+            }
+        }
     }
 
-    let result = valves
-        .clone()
-        .iter()
-        .filter(|(name, _)| !choosen.contains(*name))
-        .map(|(name, valve)| {
-            let distance = distances.get(&pos).unwrap().get(name).expect("Foo");
-            (name, valve, *distance)
-        })
-        .filter(|(_, _, distance)| distance + 1 < time)
-        .map(|(name, valve, distance)| {
-            let choosen = {
-                let mut copy = choosen.clone();
-                copy.insert(name.clone());
-                copy
-            };
-            let (rest_total, mut rest_path) = knapsack_with_path(
-                name.clone(),
-                valves,
-                choosen,
-                distances,
-                time - distance - 1,
-                cache,
-            );
-            rest_path.push(name.clone());
-            let reward = valve.flow * (time - distance - 1);
-            let total = rest_total + reward;
-
-            (total, rest_path)
-        })
-        .max_by_key(|(total, _)| *total)
-        .unwrap_or((0, vec![]));
-
-    cache.insert((pos, time, choosen), result.clone());
-
-    result
+    results
 }
 
-fn shortest_distance(valves: &HashMap<String, Valve>, from: &str, to: &str) -> Option<usize> {
-    let mut queue: VecDeque<(usize, &str)> = Default::default();
+fn shortest_distance(valves: &Valves, from: ValveID, to: ValveID) -> Option<usize> {
+    let mut queue: VecDeque<(usize, ValveID)> = Default::default();
     queue.push_front((0, from));
 
-    let mut visited: HashSet<&str> = Default::default();
+    let mut visited: Path = 0;
 
     while let Some((distance, pos)) = queue.pop_front() {
         if pos == to {
             return Some(distance);
         }
 
-        for tunnel in valves.get(pos).unwrap().tunnels.as_slice() {
-            if !visited.contains(tunnel.as_str()) {
-                queue.push_back((distance + 1, tunnel.as_str()));
+        for tunnel in valves.get(&pos).unwrap().tunnels.as_slice() {
+            if visited & tunnel == 0 {
+                queue.push_back((distance + 1, *tunnel));
             }
         }
 
-        visited.insert(pos);
+        visited |= pos;
     }
     None
 }
 
-type Distances = HashMap<String, HashMap<String, usize>>;
+type Distances = HashMap<ValveID, HashMap<ValveID, usize>>;
 
-fn shortest_distances(valves: &HashMap<String, Valve>) -> Distances {
+fn shortest_distances(valves: &Valves) -> Distances {
     let mut distances: Distances = Default::default();
 
     for (idx, from) in valves.keys().enumerate() {
         for to in valves.keys().skip(idx + 1) {
-            if from == "AA"
-                || to == "AA"
-                || (valves.get(from).unwrap().flow > 0 && valves.get(to).unwrap().flow > 0)
+            if (valves.get(from).unwrap().flow > 0 && valves.get(to).unwrap().flow > 0)
+                || (*from == 1 && valves.get(to).unwrap().flow > 0)
+                || (*to == 1 && valves.get(from).unwrap().flow > 0)
             {
-                if let Some(d) = shortest_distance(valves, from.as_str(), to.as_str()) {
-                    distances
-                        .entry(from.clone())
-                        .or_default()
-                        .insert(to.clone(), d);
+                if let Some(d) = shortest_distance(valves, *from, *to) {
+                    distances.entry(*from).or_default().insert(*to, d);
 
-                    distances
-                        .entry(to.clone())
-                        .or_default()
-                        .insert(from.clone(), d);
+                    distances.entry(*to).or_default().insert(*from, d);
                 }
             }
         }
