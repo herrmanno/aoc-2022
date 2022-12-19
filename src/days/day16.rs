@@ -12,6 +12,8 @@
 use std::collections::VecDeque;
 
 use aoc_runner::Day;
+use std::collections::BTreeMap;
+use std::cmp::Reverse;
 use rustc_hash::FxHashMap as HashMap;
 
 type ValveID = u64;
@@ -97,10 +99,20 @@ impl Day for Day16 {
     fn part2(&mut self) -> Self::Result2 {
         const TIME: usize = 26;
         let results = dfs_with_paths(&self.0, &self.1, TIME);
-        let mut best_score = 0;
 
-        for (path_1, score_1) in results.iter() {
-            for (path_2, score_2) in results.iter() {
+        let results: BTreeMap<Reverse<usize>, Path> = results
+            .into_iter()
+            .map(|(path, score)| (Reverse(score), path))
+            .collect();
+
+        let Reverse(max_score) = *results.iter().next().unwrap().0;
+
+        let mut best_score: usize = 0;
+        for (idx, (Reverse(score_1), path_1)) in results.iter().enumerate() {
+            'inner: for (Reverse(score_2), path_2) in results.iter().skip(idx + 1) {
+                if score_1 + score_2 < max_score {
+                    break 'inner;
+                }
                 if *path_1 & *path_2 == 0 {
                     best_score = best_score.max(score_1 + score_2);
                 }
@@ -115,10 +127,16 @@ impl Day for Day16 {
 fn dfs_max(valves: &Valves, distances: &Distances, max_time: usize) -> usize {
     let mut best_score = 0;
 
+    let max_flow: usize = valves.values().map(|valve| valve.flow).sum();
+
     type State = (ValveID, Path, usize, usize);
     let mut queue: Vec<State> = Vec::from([(1, 0, 0, 0)]);
     while let Some((pos, path, score, time)) = queue.pop() {
         best_score = best_score.max(score);
+
+        if score + (max_time - time).saturating_sub(2) * max_flow < best_score {
+            continue;
+        }
 
         let targets = &distances[&pos];
         for (tunnel, distance) in targets {
@@ -143,12 +161,18 @@ type Path = ValveID;
 fn dfs_with_paths(valves: &Valves, distances: &Distances, max_time: usize) -> HashMap<Path, usize> {
     let mut results: HashMap<Path, usize> = Default::default();
 
+    let max_flow: usize = valves.values().map(|valve| valve.flow).sum();
+
     type State = (ValveID, Path, usize, usize);
     let mut queue: Vec<State> = Vec::from([(1, 0, 0, 0)]);
     while let Some((pos, path, score, time)) = queue.pop() {
-        let best_score = results.get(&path).unwrap_or(&0);
-        if score > *best_score {
+        let path_best_score = *results.get(&path).unwrap_or(&0);
+        if score > path_best_score {
             results.insert(path, score);
+        }
+
+        if score + (max_time - time).saturating_sub(2) * max_flow < path_best_score {
+            continue;
         }
 
         let targets = &distances[&pos];
