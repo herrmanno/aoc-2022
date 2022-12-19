@@ -8,6 +8,7 @@
 
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
+use std::hash::Hash;
 
 use rustc_hash::FxHashSet as HashSet;
 
@@ -122,30 +123,51 @@ impl Day for Day19 {
     }
 }
 
+/// Find optimal blueprint result
+/// 
+/// # IDEA
+/// Use DFS to explore the whole search state but prune branches and decisions by a few rules:
+/// - keep track of the best possible score to gain
+/// - prune branches that are not capable of beating that score in any way
+/// - treat decisions in descending order: geode, obsidian, clay, ore
+/// - try to build geode robots first. If one can build a geode borot don't look at other decisions
+/// - do not build more robot of a single type than one needs at maximum to produce another robot
+///     - if the most expensive (with regard to a single resource) robot needs x units of that
+///       resource dont build more than x robots of that resource
+/// - don't build robots one could have build in the round before
 fn search(blueprint: &Blueprint, start: BlueprintResult, max_time: Time) -> BlueprintResult {
     let max_ore_robots = blueprint.max_ore_cost();
     let max_clay_robots = blueprint.max_clay_cost();
     let max_obsidian_robots = blueprint.max_obsidian_cost();
 
-    type State = (Reverse<Time>, Resource, Resource, BlueprintResult);
-    let mut queue: BinaryHeap<State> = Default::default();
-    queue.push((Reverse(0), 0, 0, start));
+    type State = (Time, BlueprintResult);
+    let mut queue: Vec<State> = Default::default();
+    queue.push((0, start.clone()));
 
-    let mut visited: HashSet<BlueprintResult> = Default::default();
+    let mut best_score = start;
 
-    while let Some((Reverse(time), _, geode_robots, mut state)) = queue.pop() {
+    while let Some((time, mut state)) = queue.pop() {
         if time == max_time {
-            return state;
-        }
-
-        if !visited.insert(state.clone()) {
+            if state.resources[3] > best_score.resources[3] {
+                best_score = state;
+            }
             continue;
         }
 
         // capture resource from time - 1 for later comparison
         // if we had the chance to build robot x in last round we should have done so and forbid
         // building that robot type this round!
-        let [old_ore, old_clay, old_obsidian, _] = state.resources;
+        let [old_ore, old_clay, old_obsidian, geode_old] = state.resources;
+
+        // the maximum amount of geode we could gain if we produce another geode robot every round
+        // from now on until time runs out
+        // credits to https://www.reddit.com/r/adventofcode/comments/zpy5rm/comment/j0v9g8t/?utm_source=share&utm_medium=web2x&context=3
+        let optimal_extra_geode: Resource = (0..(max_time - time)).sum();
+        if geode_old + (max_time - time) * state.robots[3] + optimal_extra_geode
+            < best_score.resources[3]
+        {
+            continue;
+        }
 
         for i in 0..4 {
             state.resources[i] += state.robots[i];
@@ -160,10 +182,41 @@ fn search(blueprint: &Blueprint, start: BlueprintResult, max_time: Time) -> Blue
         let [ore, clay, obsidian, geode] = state.resources;
         let [ore_robots, clay_robots, obsidian_robots, _] = state.robots;
 
-        if ore >= blueprint.geode_cost.0
-            && obsidian >= blueprint.geode_cost.1
-            && (old_ore < blueprint.geode_cost.0 || old_obsidian < blueprint.geode_cost.1)
-        {
+        let can_build_geode = {
+            ore >= blueprint.geode_cost.0
+                && obsidian >= blueprint.geode_cost.1
+                && (old_ore < blueprint.geode_cost.0 || old_obsidian < blueprint.geode_cost.1)
+        };
+
+        let can_build_obsidian = {
+            let max_obsidian_demand = max_obsidian_robots * (max_time - time);
+            let obsidian_supply = obsidian + obsidian_robots * (max_time - time);
+            obsidian_robots < max_obsidian_robots
+                && max_obsidian_demand > obsidian_supply
+                && ore >= blueprint.obsidian_cost.0
+                && clay >= blueprint.obsidian_cost.1
+                && (old_ore < blueprint.obsidian_cost.0 || old_clay < blueprint.obsidian_cost.1)
+        };
+
+        let can_build_clay = {
+            let max_clay_demand = max_clay_robots * (max_time - time);
+            let clay_supply = clay + clay_robots * (max_time - time);
+            clay_robots < max_clay_robots
+                && max_clay_demand > clay_supply
+                && ore >= blueprint.clay_cost
+                && old_ore < blueprint.clay_cost
+        };
+
+        let can_build_ore = {
+            let max_ore_demand = max_ore_robots * (max_time - time);
+            let ore_supply = ore + ore_robots * (max_time - time);
+            ore_robots < max_ore_robots
+                && max_ore_demand > ore_supply
+                && ore >= blueprint.ore_cost
+                && old_ore < blueprint.ore_cost
+        };
+
+        if can_build_geode {
             let new_state = BlueprintResult {
                 robots_building: [0, 0, 0, 1],
                 resources: [
@@ -174,18 +227,31 @@ fn search(blueprint: &Blueprint, start: BlueprintResult, max_time: Time) -> Blue
                 ],
                 ..state
             };
-            queue.push((Reverse(time + 1), geode, geode_robots, new_state));
+            queue.push((time + 1, new_state));
             continue;
         }
 
-        let max_obsidian_demand = max_obsidian_robots * (max_time - time);
-        let obsidian_supply = obsidian + obsidian_robots * (max_time - time);
-        if obsidian_robots < max_obsidian_robots
-            && max_obsidian_demand > obsidian_supply
-            && ore >= blueprint.obsidian_cost.0
-            && clay >= blueprint.obsidian_cost.1
-            && (old_ore < blueprint.obsidian_cost.0 || old_clay < blueprint.obsidian_cost.1)
-        {
+        queue.push((time + 1, state.clone()));
+
+        if can_build_ore {
+            let new_state = BlueprintResult {
+                robots_building: [1, 0, 0, 0],
+                resources: [ore - blueprint.ore_cost, clay, obsidian, geode],
+                ..state
+            };
+            queue.push((time + 1, new_state));
+        }
+
+        if can_build_clay {
+            let new_state = BlueprintResult {
+                robots_building: [0, 1, 0, 0],
+                resources: [ore - blueprint.clay_cost, clay, obsidian, geode],
+                ..state
+            };
+            queue.push((time + 1, new_state));
+        }
+
+        if can_build_obsidian {
             let new_state = BlueprintResult {
                 robots_building: [0, 0, 1, 0],
                 resources: [
@@ -196,49 +262,11 @@ fn search(blueprint: &Blueprint, start: BlueprintResult, max_time: Time) -> Blue
                 ],
                 ..state
             };
-            let new_state_ore = new_state.resources[0];
-            queue.push((Reverse(time + 1), geode, geode_robots, new_state));
-
-            // continue if building a obsidian robot does not interfer with building the maximum of geode robots
-            if new_state_ore >= (max_time - time) * blueprint.geode_cost.0 {
-                continue;
-            }
+            queue.push((time + 1, new_state));
         }
-
-        let max_clay_demand = max_clay_robots * (max_time - time);
-        let clay_supply = clay + clay_robots * (max_time - time);
-        if clay_robots < max_clay_robots
-            && max_clay_demand > clay_supply
-            && ore >= blueprint.clay_cost
-            && old_ore < blueprint.clay_cost
-        {
-            let new_state = BlueprintResult {
-                robots_building: [0, 1, 0, 0],
-                resources: [ore - blueprint.clay_cost, clay, obsidian, geode],
-                ..state
-            };
-            queue.push((Reverse(time + 1), geode, geode_robots, new_state));
-        }
-
-        let max_ore_demand = max_ore_robots * (max_time - time);
-        let ore_supply = ore + ore_robots * (max_time - time);
-        if ore_robots < max_ore_robots
-            && max_ore_demand > ore_supply
-            && ore >= blueprint.ore_cost
-            && old_ore < blueprint.ore_cost
-        {
-            let new_state = BlueprintResult {
-                robots_building: [1, 0, 0, 0],
-                resources: [ore - blueprint.ore_cost, clay, obsidian, geode],
-                ..state
-            };
-            queue.push((Reverse(time + 1), geode, geode_robots, new_state));
-        }
-
-        queue.push((Reverse(time + 1), geode, geode_robots, state));
     }
 
-    unreachable!()
+    best_score
 }
 
 #[cfg(test)]
