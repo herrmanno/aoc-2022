@@ -1,9 +1,7 @@
-//! # Day 19
+//! # Day 19 Not Enough Minerals
 //!
-//!
-//!
-//! - a)
-//! - b)
+//! Given a list of blueprints (costs to produce different kind of materials) find the highest
+//! number of 'geode' on can produce in 24 / 32 minutes.
 //!
 
 use aoc_runner::Day;
@@ -118,7 +116,7 @@ impl Day for Day19 {
 }
 
 /// Find optimal blueprint result
-/// 
+///
 /// # IDEA
 /// Use DFS to explore the whole search state but prune branches and decisions by a few rules:
 /// - keep track of the best possible score to gain

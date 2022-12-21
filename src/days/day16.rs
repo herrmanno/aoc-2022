@@ -12,9 +12,9 @@
 use std::collections::VecDeque;
 
 use aoc_runner::Day;
-use std::collections::BTreeMap;
-use std::cmp::Reverse;
 use rustc_hash::FxHashMap as HashMap;
+use std::cmp::Reverse;
+use std::collections::BTreeMap;
 
 type ValveID = u64;
 
