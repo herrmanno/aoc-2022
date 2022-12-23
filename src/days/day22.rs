@@ -160,13 +160,19 @@ impl Day for Day22 {
     }
 }
 
+/// Callback to handle walking past an edge
+///
+/// Should return [ControlFlow::Break] if the next tile is a wall or [ControlFlow::Continue] with
+/// the new position and direction
+type OnEdge = fn(&Board, C, Coord, Direction) -> ControlFlow<(), (Coord, Direction)>;
+
 fn walk(
     board: &Board,
     side_length: C,
     start: Coord,
     direction: Direction,
     commands: &[Command],
-    on_edge: fn(&Board, C, Coord, Direction) -> ControlFlow<(), (Coord, Direction)>,
+    on_edge: OnEdge,
 ) -> (Coord, Direction) {
     let mut pos = start;
     let mut dir = direction;
@@ -195,22 +201,10 @@ fn walk(
                 }
             }
             Command::TurnR() => {
-                dir = match dir {
-                    (0, 1) => (1, 0),
-                    (1, 0) => (0, -1),
-                    (0, -1) => (-1, 0),
-                    (-1, 0) => (0, 1),
-                    _ => unreachable!(),
-                };
+                dir = (dir.1, -dir.0);
             }
             Command::TurnL() => {
-                dir = match dir {
-                    (0, 1) => (-1, 0),
-                    (-1, 0) => (0, -1),
-                    (0, -1) => (1, 0),
-                    (1, 0) => (0, 1),
-                    _ => unreachable!(),
-                };
+                dir = (-dir.1, dir.0);
             }
         }
     }
@@ -275,133 +269,6 @@ fn walk_cube(
         }
     }
     walk(board, side_length, start, direction, commands, on_edge)
-}
-
-fn walk_board_(
-    board: &Board,
-    side_length: C,
-    start: Coord,
-    direction: Direction,
-    commands: &[Command],
-) -> (Coord, Direction) {
-    let mut pos = start;
-    let mut dir = direction;
-    for command in commands {
-        match command {
-            Command::Walk(n) => {
-                'walk: for _ in 0..*n {
-                    let new_pos = (pos.0 + dir.0, pos.1 + dir.1);
-                    match board.get(&new_pos) {
-                        Some(Tile::Empty) => {
-                            pos = new_pos;
-                        }
-                        Some(Tile::Wall) => {
-                            break 'walk;
-                        }
-                        None => {
-                            let new_pos = {
-                                let dir = (-dir.0 * side_length, -dir.1 * side_length);
-                                let mut tmp_pos = (new_pos.0 + dir.0, new_pos.1 + dir.1);
-                                while board.contains_key(&tmp_pos) {
-                                    tmp_pos.0 += dir.0;
-                                    tmp_pos.1 += dir.1;
-                                }
-                                (tmp_pos.0 - dir.0, tmp_pos.1 - dir.1)
-                            };
-                            match board.get(&new_pos) {
-                                Some(Tile::Wall) => {
-                                    break 'walk;
-                                }
-                                Some(Tile::Empty) => {
-                                    pos = new_pos;
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                    }
-                }
-            }
-            Command::TurnR() => {
-                dir = match dir {
-                    (0, 1) => (1, 0),
-                    (1, 0) => (0, -1),
-                    (0, -1) => (-1, 0),
-                    (-1, 0) => (0, 1),
-                    _ => unreachable!(),
-                };
-            }
-            Command::TurnL() => {
-                dir = match dir {
-                    (0, 1) => (-1, 0),
-                    (-1, 0) => (0, -1),
-                    (0, -1) => (1, 0),
-                    (1, 0) => (0, 1),
-                    _ => unreachable!(),
-                };
-            }
-        }
-    }
-    (pos, dir)
-}
-
-fn walk_cube_(
-    board: &Board,
-    side_length: C,
-    start: Coord,
-    direction: Direction,
-    commands: &[Command],
-) -> (Coord, Direction) {
-    let mut pos = start;
-    let mut dir = direction;
-    for command in commands {
-        match command {
-            Command::Walk(n) => {
-                'walk: for _ in 0..*n {
-                    let new_pos = (pos.0 + dir.0, pos.1 + dir.1);
-                    match board.get(&new_pos) {
-                        Some(Tile::Empty) => {
-                            pos = new_pos;
-                        }
-                        Some(Tile::Wall) => {
-                            break 'walk;
-                        }
-                        // wrap around
-                        None => {
-                            let new_pos = find_point_on_cube(board, side_length, pos, new_pos);
-                            if board.get(&new_pos) == Some(&Tile::Wall) {
-                                break 'walk;
-                            } else {
-                                pos = new_pos;
-                                dir = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-                                    .into_iter()
-                                    .find(|(dy, dx)| !board.contains_key(&(pos.0 - dy, pos.1 - dx)))
-                                    .unwrap();
-                            }
-                        }
-                    }
-                }
-            }
-            Command::TurnR() => {
-                dir = match dir {
-                    (0, 1) => (1, 0),
-                    (1, 0) => (0, -1),
-                    (0, -1) => (-1, 0),
-                    (-1, 0) => (0, 1),
-                    _ => unreachable!(),
-                };
-            }
-            Command::TurnL() => {
-                dir = match dir {
-                    (0, 1) => (-1, 0),
-                    (-1, 0) => (0, -1),
-                    (0, -1) => (1, 0),
-                    (1, 0) => (0, 1),
-                    _ => unreachable!(),
-                };
-            }
-        }
-    }
-    (pos, dir)
 }
 
 /// Given a board (an unrolled cube) and a point that is not part of the board, find the correspnding
