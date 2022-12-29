@@ -5,10 +5,10 @@
 //! - a) find the shortest path (time) from start to target
 //! - b) find the shortest path (time) from start -> target -> start -> target
 
-use std::collections::BinaryHeap;
+use std::collections::VecDeque;
 
 use aoc_runner::Day;
-use rustc_hash::{FxHashSet as HashSet};
+use rustc_hash::{FxHashMap, FxHashSet as HashSet};
 
 type C = i32;
 type Coord = (C, C);
@@ -67,27 +67,17 @@ impl Day for Day24 {
 
 impl Day24 {
     fn shortest_path(&self, start: Coord, target: Coord, time: usize) -> usize {
-        #[derive(Debug, PartialEq, Eq)]
-        struct State(usize, Coord, u32);
+        #[derive(Debug, PartialEq, Eq, Hash)]
+        struct State(usize, Coord);
 
-        impl PartialOrd for State {
-            fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-                Some(self.cmp(other))
-            }
-        }
-
-        impl Ord for State {
-            fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-                other.0.cmp(&self.0).then(other.2.cmp(&self.2))
-            }
-        }
-
+        let blizzard_mod = num::integer::lcm(self.col_length, self.row_length);
+        let mut blizzard_cache: FxHashMap<State, bool> = Default::default();
         let mut visited: HashSet<(usize, Coord)> = Default::default();
-        let mut queue: BinaryHeap<State> = Default::default();
-        let start_state = State(time, start, 0);
-        queue.push(start_state);
+        let mut queue: VecDeque<State> = Default::default();
+        let start_state = State(time, start);
+        queue.push_back(start_state);
 
-        while let Some(State(time, pos, _)) = queue.pop() {
+        while let Some(State(time, pos)) = queue.pop_front() {
             if !visited.insert((time, pos)) {
                 continue;
             }
@@ -107,10 +97,15 @@ impl Day24 {
                     continue;
                 }
 
-                if !self.is_blizzard_at(new_pos, time + 1) {
-                    let distance = new_pos.0.abs_diff(target.0) + new_pos.1.abs_diff(target.1);
-                    let new_state = State(time + 1, new_pos, distance);
-                    queue.push(new_state);
+                let has_blizzard = {
+                    let cache_key = State((time + 1) % blizzard_mod, new_pos);
+                    blizzard_cache
+                        .entry(cache_key)
+                        .or_insert_with(|| self.is_blizzard_at(new_pos, time + 1))
+                };
+                if !*has_blizzard {
+                    let new_state = State(time + 1, new_pos);
+                    queue.push_back(new_state);
                 }
             }
         }
