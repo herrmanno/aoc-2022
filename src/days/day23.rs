@@ -106,7 +106,7 @@ fn do_round(map: &mut HashSet<Coord>, direction: u8) -> usize {
         /// Tile is blocked because more than one elf already proposed this tile
         Blocked,
         /// Tile was proposed by elf currently at [Proposal::ProposedBy(0)]
-        ProposedBy(Coord)
+        ProposedBy(Coord),
     }
 
     let mut proposals: HashMap<Coord, Proposal> = Default::default();
@@ -120,7 +120,8 @@ fn do_round(map: &mut HashSet<Coord>, direction: u8) -> usize {
                     .all(|p| !map.contains(&(pos.0 + p.0, pos.1 + p.1)))
                 {
                     let proposed_pos = (pos.0 + proposed_dir.0, pos.1 + proposed_dir.1);
-                    proposals.entry(proposed_pos)
+                    proposals
+                        .entry(proposed_pos)
                         .and_modify(|prop| *prop = Proposal::Blocked)
                         .or_insert(Proposal::ProposedBy(pos));
 
